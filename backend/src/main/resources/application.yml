@@ -1,0 +1,41 @@
+server:
+  port: ${PORT:8080}                      # Render sets PORT
+  forward-headers-strategy: framework     # behind Render's HTTPS proxy: trust X-Forwarded-Proto/Host
+  error:
+    include-message: always   # the browser shows our error messages
+  servlet:
+    session:
+      timeout: 8h   # long transfers keep the HighQ connection in the session
+      cookie:
+        secure: ${COOKIE_SECURE:false}    # true when hosted on HTTPS
+        http-only: true
+  tomcat:
+    max-swallow-size: -1
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: -1        # HighQ zips can be large
+      max-request-size: -1
+      file-size-threshold: 1MB # spool uploads to disk, not memory
+
+highq:
+  instance-url: ${HIGHQ_INSTANCE_URL:}
+  client-id: ${HIGHQ_CLIENT_ID:}
+  client-secret: ${HIGHQ_CLIENT_SECRET:}
+  redirect-uri: ${HIGHQ_REDIRECT_URI:http://localhost:8080/callback}
+  api-version: ${HIGHQ_API_VERSION:20}
+
+graph:
+  base-url: ${GRAPH_BASE_URL:https://graph.microsoft.com/v1.0}
+  # "organizations" accepts work accounts from any tenant; use a tenant id to allow one organisation only
+  authorize-url: ${GRAPH_AUTHORIZE_URL:https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize}
+  token-url: ${GRAPH_TOKEN_URL:https://login.microsoftonline.com/organizations/oauth2/v2.0/token}
+  client-id: ${GRAPH_CLIENT_ID:}
+  client-secret: ${GRAPH_CLIENT_SECRET:}
+  redirect-uri: ${GRAPH_REDIRECT_URI:http://localhost:8080/auth/microsoft/callback}
+  scope: ${GRAPH_SCOPE:}   # empty = offline_access openid profile User.Read Sites.ReadWrite.All
+
+app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  upload-dir: ${APP_UPLOAD_DIR:${java.io.tmpdir}/hq2sp-uploads}

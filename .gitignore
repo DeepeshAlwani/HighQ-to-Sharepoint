@@ -1,0 +1,13 @@
+# secrets
+.env
+
+# build output
+node_modules/
+dist/
+target/
+
+# client data from prototype runs
+highq-download/
+probe-output/
+sharepoint-mock-data/
+*.part

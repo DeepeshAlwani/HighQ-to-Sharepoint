@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      # SharePoint defaults to the local mock. Put real values in .env to use Microsoft instead.
+      GRAPH_BASE_URL: ${GRAPH_BASE_URL:-http://sharepoint-mock:4000/v1.0}
+      GRAPH_AUTHORIZE_URL: ${GRAPH_AUTHORIZE_URL:-http://localhost:4000/organizations/oauth2/v2.0/authorize}   # opened by the browser
+      GRAPH_TOKEN_URL: ${GRAPH_TOKEN_URL:-http://sharepoint-mock:4000/organizations/oauth2/v2.0/token}        # called by the backend
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID:-mock-client}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET:-mock-secret}
+      GRAPH_REDIRECT_URI: ${GRAPH_REDIRECT_URI:-http://localhost:8080/auth/microsoft/callback}
+    depends_on:
+      - sharepoint-mock
+
+  # Stand-in for SharePoint (Microsoft Graph) and Microsoft sign-in. Uploaded files appear in ./sharepoint-mock-data.
+  sharepoint-mock:
+    build: ./sharepoint-mock
+    ports:
+      - "127.0.0.1:4000:4000"   # the browser opens its sign-in page
+    volumes:
+      - ./sharepoint-mock-data:/data
+    environment:
+      MOCK_THROTTLE_EVERY: ${MOCK_THROTTLE_EVERY:-0}
+      MOCK_TOKEN_SECONDS: ${MOCK_TOKEN_SECONDS:-3600}

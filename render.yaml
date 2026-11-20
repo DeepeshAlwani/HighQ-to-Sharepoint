@@ -1,0 +1,52 @@
+# Render Blueprint: New > Blueprint, pick this repo. Values marked sync: false are entered in the
+# Render dashboard (never in git). <app> below is the address Render gives the service, e.g. highq-migration.onrender.com
+services:
+  - type: web
+    name: highq-migration
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free            # free instances sleep after 15 min idle and restart, which ends in-progress jobs and sign-ins
+    healthCheckPath: /auth/highq/status
+    envVars:
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: APP_FRONTEND_URL
+        sync: false       # https://<app>
+      - key: APP_UPLOAD_DIR
+        value: /tmp/hq2sp-uploads
+      - key: HIGHQ_INSTANCE_URL
+        sync: false
+      - key: HIGHQ_CLIENT_ID
+        sync: false
+      - key: HIGHQ_CLIENT_SECRET
+        sync: false
+      - key: HIGHQ_REDIRECT_URI
+        sync: false       # https://<app>/callback, also registered on the HighQ API app
+      - key: HIGHQ_API_VERSION
+        value: "20"
+      # Microsoft sign-in + SharePoint. Real values come from infra/register-entra-app.ps1 (copy from .env).
+      - key: GRAPH_BASE_URL
+        sync: false       # https://graph.microsoft.com/v1.0
+      - key: GRAPH_AUTHORIZE_URL
+        sync: false       # https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize
+      - key: GRAPH_TOKEN_URL
+        sync: false       # https://login.microsoftonline.com/organizations/oauth2/v2.0/token
+      - key: GRAPH_CLIENT_ID
+        sync: false
+      - key: GRAPH_CLIENT_SECRET
+        sync: false
+      - key: GRAPH_REDIRECT_URI
+        sync: false       # https://<app>/auth/microsoft/callback
+
+  # Optional: the SharePoint stand-in, for demos before a real Microsoft 365 tenant is available.
+  # Point the GRAPH_* values above at https://<mock>/v1.0 and https://<mock>/organizations/oauth2/v2.0/...
+  # Anyone with its address can use it; its files are lost when it restarts. Delete it once real SharePoint is used.
+  - type: web
+    name: sharepoint-mock
+    runtime: docker
+    dockerfilePath: ./sharepoint-mock/Dockerfile
+    dockerContext: ./sharepoint-mock
+    plan: free
+    envVars:
+      - key: DATA_DIR
+        value: /tmp/sharepoint-mock-data

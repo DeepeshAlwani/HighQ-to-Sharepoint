@@ -1,0 +1,7 @@
+{
+  "name": "sharepoint-mock",
+  "private": true,
+  "type": "module",
+  "description": "Local stand-in for the Microsoft Graph calls the migration makes. No dependencies.",
+  "scripts": { "start": "node server.js" }
+}

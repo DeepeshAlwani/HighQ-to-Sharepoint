@@ -1,0 +1,42 @@
+:root {
+  --text: #1f2328;
+  --muted: #59636e;
+  --line: #d1d9e0;
+  --bg: #ffffff;
+  --panel: #f6f8fa;
+  --accent: #0969da;
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  --error: #cf222e;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --text: #e6edf3; --muted: #9198a1; --line: #3d444d; --bg: #0d1117; --panel: #151b23;
+          --accent: #4493f8; --ok: #3fb950; --warn: #d29922; --error: #f85149; }
+}
+body { margin: 0; }
+main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+nav { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+.tab { border: none; background: none; padding: 8px 4px; color: var(--muted); border-bottom: 2px solid transparent; }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+.step h3 { margin: 0 0 8px; font-size: 15px; }
+label { display: inline-flex; gap: 6px; align-items: center; margin-right: 12px; }
+label.check { display: flex; margin-top: 8px; }
+label.wide { display: flex; margin-bottom: 8px; }
+label.wide input { flex: 1; width: auto; }
+nav { flex-wrap: wrap; }
+input, button, .button { font: inherit; }
+input:not([type]) { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); width: 120px; }
+button, .button { padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); cursor: pointer; text-decoration: none; display: inline-block; }
+button:disabled { opacity: .5; cursor: default; }
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.error { color: var(--error); }
+.note { color: var(--muted); }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 4px 6px; vertical-align: top; word-break: break-word; }
+tr.error td { color: var(--error); }
