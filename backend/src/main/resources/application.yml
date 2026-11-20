@@ -25,6 +25,9 @@ highq:
   client-secret: ${HIGHQ_CLIENT_SECRET:}
   redirect-uri: ${HIGHQ_REDIRECT_URI:http://localhost:8080/callback}
   api-version: ${HIGHQ_API_VERSION:20}
+  # Sharing one registered redirect URI between two servers (see HighQProperties):
+  forward-to: ${HIGHQ_FORWARD_TO:}                     # on the server that owns it: https://<other>/callback
+  signin-forwarded: ${HIGHQ_SIGNIN_FORWARDED:false}    # on the other server: true
 
 graph:
   base-url: ${GRAPH_BASE_URL:https://graph.microsoft.com/v1.0}
