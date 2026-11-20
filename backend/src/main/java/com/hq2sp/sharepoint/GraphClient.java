@@ -59,6 +59,11 @@ public class GraphClient {
     public record Item(String name, long size, boolean folder, Instant fileModified) {
     }
 
+    /** True while SharePoint calls go to the local/Render mock instead of Microsoft Graph. */
+    public boolean simulated() {
+        return props.baseUrl() == null || !props.baseUrl().startsWith("https://graph.microsoft.com");
+    }
+
     public boolean configured() {
         return StringUtils.hasText(props.authorizeUrl()) && StringUtils.hasText(props.tokenUrl()) && StringUtils.hasText(props.clientId());
     }

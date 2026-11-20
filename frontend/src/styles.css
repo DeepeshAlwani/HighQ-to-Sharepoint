@@ -37,6 +37,9 @@ button:disabled { opacity: .5; cursor: default; }
 .warn { color: var(--warn); }
 .error { color: var(--error); }
 .note { color: var(--muted); }
+.notice { border: 1px solid var(--warn); border-left-width: 4px; border-radius: 6px; padding: 4px 12px; margin-bottom: 12px; background: var(--bg); }
+.notice p, .notice li { margin: 6px 0; }
+.notice code { font-size: 12px; }
 table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
 th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 4px 6px; vertical-align: top; word-break: break-word; }
 tr.error td { color: var(--error); }

@@ -71,6 +71,7 @@ public class MicrosoftAuthController {
         MicrosoftTokens t = (MicrosoftTokens) session.getAttribute(MicrosoftTokens.SESSION_KEY);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("connected", t != null);
+        out.put("simulated", graph.simulated());
         if (t != null) out.put("user", t.user());
         return out;
     }

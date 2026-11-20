@@ -12,7 +12,7 @@ export default function SharePointTargetForm({ step, disabled, onChange }: {
   disabled: boolean
   onChange: (t: SharePointTarget | null) => void
 }) {
-  const [ms, setMs] = useState<{ connected: boolean; user?: string } | null>(null)
+  const [ms, setMs] = useState<{ connected: boolean; simulated?: boolean; user?: string } | null>(null)
   const [target, setTarget] = useState<SharePointTarget>({ siteUrl: 'https://contoso.sharepoint.com/sites/Migration', library: 'Documents', folderPath: '' })
   const [checked, setChecked] = useState<{ siteName: string; library: string; folderPath: string } | null>(null)
   const [error, setError] = useState(new URLSearchParams(location.search).get('microsoftError') ?? '')
@@ -49,6 +49,22 @@ export default function SharePointTargetForm({ step, disabled, onChange }: {
   return (
     <div className="step">
       <h3>{step}. Choose the SharePoint destination</h3>
+      {ms?.simulated && (
+        <div className="notice" role="note">
+          <p><b>SharePoint is simulated for now.</b> Microsoft sign-in and SharePoint are a test stand-in: any email
+            signs in, and copied files go to a temporary test store, not to a real SharePoint site. HighQ is real.</p>
+          <p>To use real SharePoint, the firm's IT needs to:</p>
+          <ul>
+            <li>Register an app in Microsoft Entra ID (Web platform, client secret) with delegated Microsoft Graph
+              permissions <code>offline_access</code>, <code>openid</code>, <code>profile</code>, <code>User.Read</code>,{' '}
+              <code>Sites.ReadWrite.All</code>, and grant admin consent.</li>
+            <li>Add the redirect URI <code>{location.origin}/auth/microsoft/callback</code>.</li>
+            <li>Provide a SharePoint site the user can edit (a test site first).</li>
+          </ul>
+          <p>Then the <code>GRAPH_*</code> settings are switched to Microsoft's addresses and the new client id and secret.
+            No code change is needed.</p>
+        </div>
+      )}
       {ms === null ? <p>Checking…</p>
         : ms.connected
           ? <p>Signed in to Microsoft as <b>{ms.user}</b>. Files are copied with your SharePoint permissions.{' '}
