@@ -65,6 +65,13 @@ public class Job {
         if (logIt) log(path, "skipped", detail);
     }
 
+    /** A zip replaced by its files: they are added to the total, the zip itself counts as finished. */
+    public void unzipped(String path, String detail, int files) {
+        total.addAndGet(files);
+        finished.incrementAndGet();
+        log(path, "unzipped", detail);
+    }
+
     public void failed(String path, String detail) {
         failed.incrementAndGet();
         finished.incrementAndGet();

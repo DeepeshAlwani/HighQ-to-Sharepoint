@@ -41,7 +41,7 @@ public class JobController {
         this.uploadDir = Path.of(uploadDir);
     }
 
-    public record HighQToSharePointRequest(long siteId, Long folderId, SharePointTarget target, boolean originals) {
+    public record HighQToSharePointRequest(long siteId, Long folderId, SharePointTarget target, boolean originals, boolean unzip) {
     }
 
     @PostMapping("/highq-to-sharepoint")
@@ -50,7 +50,7 @@ public class JobController {
         // fail fast on a wrong site or library; the copy runs as the signed-in Microsoft user
         GraphClient.Target target = graph.resolve(MicrosoftTokens.from(http.getSession()), req.target());
         Job job = jobs.start("highq-to-sharepoint", http.getSession().getId(),
-                j -> transfers.highQToSharePoint(j, t, req.siteId(), req.folderId(), target, req.originals()));
+                j -> transfers.highQToSharePoint(j, t, req.siteId(), req.folderId(), target, req.originals(), req.unzip()));
         return Map.of("id", job.id());
     }
 
@@ -64,6 +64,7 @@ public class JobController {
                                                @RequestParam(defaultValue = "Documents") String library,
                                                @RequestParam(defaultValue = "") String folderPath,
                                                @RequestParam(defaultValue = "true") boolean deleteAfter,
+                                               @RequestParam(defaultValue = "false") boolean unzipNested,
                                                HttpServletRequest http) throws IOException {
         if (file.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The zip is empty");
         GraphClient.Target target = graph.resolve(MicrosoftTokens.from(http.getSession()), new SharePointTarget(siteUrl, library, folderPath));
@@ -71,7 +72,7 @@ public class JobController {
         Path saved = uploadDir.resolve(UUID.randomUUID() + ".zip");
         file.transferTo(saved);
         Job job = jobs.start("zip-to-sharepoint", http.getSession().getId(),
-                j -> transfers.zipToSharePoint(j, saved, target, deleteAfter));
+                j -> transfers.zipToSharePoint(j, saved, target, deleteAfter, unzipNested));
         return Map.of("id", job.id(), "keptZipAt", deleteAfter ? "" : saved.toString());
     }
 

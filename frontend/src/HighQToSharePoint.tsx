@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { postJson } from './api'
 import HighQSource, { type HighQSelection } from './HighQSource'
 import JobProgress from './JobProgress'
+import UnzipOption from './UnzipOption'
 import SharePointTargetForm, { type SharePointTarget } from './SharePointTargetForm'
 
 export default function HighQToSharePoint() {
   const [source, setSource] = useState<HighQSelection | null>(null)
   const [target, setTarget] = useState<SharePointTarget | null>(null)
   const [originals, setOriginals] = useState(false)
+  const [unzip, setUnzip] = useState(false)
   const [jobId, setJobId] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
   const [resetKey, setResetKey] = useState(0)
@@ -22,6 +24,7 @@ export default function HighQToSharePoint() {
         folderId: source.folderId ? Number(source.folderId) : null,
         target,
         originals,
+        unzip,
       })
       setJobId(id)
       setRunning(true)
@@ -42,6 +45,7 @@ export default function HighQToSharePoint() {
           <input type="checkbox" checked={originals} disabled={running} onChange={e => setOriginals(e.target.checked)} />
           Copy the unredacted original of redacted files (needs "download original" rights; each one is logged)
         </label>
+        <UnzipOption checked={unzip} disabled={running} onChange={setUnzip} />
       </div>
       <button className="primary" onClick={start} disabled={!source || !target || running}>Start copy</button>
       {error && <p className="error">{error}</p>}

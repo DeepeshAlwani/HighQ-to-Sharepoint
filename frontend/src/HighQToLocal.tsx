@@ -3,6 +3,8 @@ import { errorText } from './api'
 import { dirFor, folderPickerSupported, pickFolder, readJson, splitPath, writeFile, writeText } from './fs'
 import HighQSource, { type HighQSelection } from './HighQSource'
 import { Log, type Row, toCsv } from './Log'
+import UnzipOption from './UnzipOption'
+import { isArchive, newTally, unpackInPlace } from './zipExtract'
 
 type ManifestFile = {
   id: number; versionId: string; relativePath: string; shortName: string
@@ -12,6 +14,7 @@ type Manifest = { siteName: string; rootFolderId: number; folders: string[]; fil
 
 const STATE_FILE = '_highq-transfer.json'   // file id -> version already downloaded, for resume
 const REPORT_FILE = '_highq-report.csv'
+const TRANSIENT = [502, 503, 504, 520, 521, 522, 523, 524]
 const PARALLEL = 3                          // the backend also spaces calls to stay under HighQ's rate limit
 
 export default function HighQToLocal() {
@@ -19,6 +22,7 @@ export default function HighQToLocal() {
   const [resetKey, setResetKey] = useState(0)
   const [root, setRoot] = useState<FileSystemDirectoryHandle | null>(null)
   const [originals, setOriginals] = useState(false)
+  const [unzip, setUnzip] = useState(false)
   const [running, setRunning] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
   const [progress, setProgress] = useState('')
@@ -51,17 +55,25 @@ export default function HighQToLocal() {
 
       let finished = 0, downloaded = 0, skipped = 0, failed = 0
       const queue = [...m.files]
-      const fetchContent = (f: ManifestFile, useOriginal: boolean) =>
-        fetch(`/api/highq/files/${f.id}/content?original=${useOriginal}`)
+      // Retries transient gateway errors (Render's proxy answers 502/520-524 when a request is dropped);
+      // safe because it is a read-only GET.
+      const fetchContent = async (f: ManifestFile, useOriginal: boolean) => {
+        for (let attempt = 1; ; attempt++) {
+          let res: Response | null = null
+          try {
+            res = await fetch(`/api/highq/files/${f.id}/content?original=${useOriginal}`)
+            if (!TRANSIENT.includes(res.status) || attempt === 3) return res
+          } catch (e) {
+            if (attempt === 3) throw e
+          }
+          await res?.body?.cancel().catch(() => {})
+          await new Promise(r => setTimeout(r, 2000 * attempt))
+        }
+      }
 
       const worker = async () => {
         for (let f = queue.shift(); f; f = queue.shift()) {
           try {
-            if (f.placeholder) {
-              skipped++
-              log({ path: f.relativePath, status: 'skipped', detail: 'placeholder, no content in HighQ' })
-              continue
-            }
             if (done[f.id] === f.versionId) {
               skipped++
               continue
@@ -69,6 +81,13 @@ export default function HighQToLocal() {
             const useOriginal = originals && f.redacted
             const [relDir, name] = splitPath(f.relativePath)
             const dir = await dirFor(root, relDir)
+            if (f.placeholder) {   // HighQ has no content for placeholders: keep the slot as an empty file
+              await writeFile(dir, name, new Blob([]))
+              done[f.id] = f.versionId
+              downloaded++
+              log({ path: f.relativePath, status: 'placeholder', detail: 'empty file; HighQ has no content for placeholders' })
+              continue
+            }
 
             let res = await fetchContent(f, useOriginal)
             if (!res.ok || !res.body) throw new Error(`HighQ returned ${res.status}`)
@@ -87,6 +106,16 @@ export default function HighQToLocal() {
               written = await writeFile(dir, savedAs, res.body)
             }
             if (!Number.isNaN(expected) && written !== expected) throw new Error(`incomplete: ${written} of ${expected} bytes`)
+
+            if (unzip && isArchive(savedAs)) {
+              const t = newTally()
+              const ok = await unpackInPlace(root, relDir ? `${relDir}/${savedAs}` : savedAs, { log, tally: t, unzipNested: false })
+              downloaded += t.extracted
+              skipped += t.skipped
+              failed += t.failed
+              if (ok) done[f.id] = f.versionId   // otherwise a re-run tries this zip again
+              continue
+            }
 
             done[f.id] = f.versionId
             downloaded++
@@ -133,6 +162,7 @@ export default function HighQToLocal() {
           <input type="checkbox" checked={originals} onChange={e => setOriginals(e.target.checked)} />
           Download the unredacted original of redacted files (needs "download original" rights; each one is logged)
         </label>
+        <UnzipOption checked={unzip} disabled={running} onChange={setUnzip} />
       </div>
 
       <button className="primary" onClick={start} disabled={!source || !root || running}>Start download</button>

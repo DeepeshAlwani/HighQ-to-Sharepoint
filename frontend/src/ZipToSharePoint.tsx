@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import JobProgress from './JobProgress'
+import UnzipOption from './UnzipOption'
 import SharePointTargetForm, { type SharePointTarget } from './SharePointTargetForm'
 
 /** Sends a file with upload progress (fetch can't report upload progress). */
@@ -23,6 +24,7 @@ export default function ZipToSharePoint() {
   const [zip, setZip] = useState<File | null>(null)
   const [target, setTarget] = useState<SharePointTarget | null>(null)
   const [deleteAfter, setDeleteAfter] = useState(true)
+  const [unzipNested, setUnzipNested] = useState(false)
   const [uploadPct, setUploadPct] = useState<number | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [keptAt, setKeptAt] = useState('')
@@ -40,6 +42,7 @@ export default function ZipToSharePoint() {
     form.append('library', target.library)
     form.append('folderPath', target.folderPath)
     form.append('deleteAfter', String(deleteAfter))
+    form.append('unzipNested', String(unzipNested))
     try {
       const r = await upload('/api/jobs/zip-to-sharepoint', form, setUploadPct)
       setKeptAt(r.keptZipAt)
@@ -64,6 +67,7 @@ export default function ZipToSharePoint() {
           <input type="checkbox" checked={deleteAfter} disabled={running} onChange={e => setDeleteAfter(e.target.checked)} />
           Delete the uploaded zip from the server when the copy finishes
         </label>
+        <UnzipOption checked={unzipNested} disabled={running} onChange={setUnzipNested} />
       </div>
 
       <SharePointTargetForm step={2} disabled={running} onChange={setTarget} />
