@@ -52,10 +52,11 @@ public class HighQClient {
         }
     }
 
-    public String authorizeUrl() {
+    public String authorizeUrl(String state) {
         return props.instanceUrl() + "/authorize.action?response_type=code"
                 + "&client_id=" + enc(props.clientId())
-                + "&redirect_uri=" + enc(props.redirectUri());
+                + "&redirect_uri=" + enc(props.redirectUri())
+                + "&state=" + enc(state);
     }
 
     public HighQTokens exchangeCode(String code) {
